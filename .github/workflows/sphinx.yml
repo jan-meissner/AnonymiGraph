@@ -2,8 +2,9 @@ name: Deploy Docs to GitHub Pages
 
 on:
   push:
-    branches:
-      - main  # Set this to the branch containing your docs
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
@@ -28,8 +29,7 @@ jobs:
         cd docs  # Change to your documentation directory
         sphinx-build -b html . _build
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Deploy Docs to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs/_build/html
+        folder: docs/_build/html
