@@ -1,5 +1,7 @@
 # Project Name
 
+**[Documentation](https://jan-meissner.github.io/tbd/)** |
+
 Brief description of the project.
 
 ## Table of Contents
@@ -53,18 +55,6 @@ For local development, you can install the project by following these steps:
 ## Usage
 
 Provide instructions on how to use the project after installation.
-
-## Contributing
-
-We welcome contributions! If you would like to contribute to the project, please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch: `git checkout -b feature-branch-name`.
-3. Make your changes and commit them: `git commit -m 'Add some feature'`.
-4. Push to the branch: `git push origin feature-branch-name`.
-5. Submit a pull request.
-
-Please make sure to update tests as appropriate.
 
 ## License
 
