@@ -1,0 +1,42 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "py-project-toml"
+authors = [{ name = "Jan Meißner", email = "philipp.meissner@rwth-aachen.de" }]
+description = "Sample Python Project for creating a new Python Module"
+readme = "README.md"
+requires-python = ">=3.8.1"
+dynamic = ["version"]
+packages = [{ include = "python_package", from = "src" }]
+dependencies = ["numpy"]
+
+[tool.flit.module]
+name = "python_package"
+
+[project.optional-dependencies]
+dev = ["black==23.3.0", "pre-commit==3.3.1"]
+test = ["pytest", "pytest-cov"]
+full = ["jupyter"]
+
+[tool.black]
+line-length = 120
+fast = true
+
+[tool.flake8]
+max-line-length = 120
+select = "F,E,W,B,B901,B902,B903"
+exclude = [
+    ".eggs",
+    ".git",
+    ".tox",
+    "nssm",
+    "obj",
+    "out",
+    "packages",
+    "pywin32",
+    "tests",
+    "swagger_client",
+]
+ignore = ["E722", "B001", "W503", "E203", "W292"]
