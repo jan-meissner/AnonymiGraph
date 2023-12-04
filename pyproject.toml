@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "py-project-toml"
 authors = [{ name = "Jan Meißner", email = "philipp.meissner@rwth-aachen.de" }]
-description = "Sample Python Project for creating a new Python Module"
+description = "Reject me"
 readme = "README.md"
 requires-python = ">=3.8.1"
 dynamic = ["version"]
