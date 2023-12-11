@@ -9,11 +9,11 @@ description = "Reject me"
 readme = "README.md"
 requires-python = ">=3.8.1"
 dynamic = ["version"]
-packages = [{ include = "python_package", from = "src" }]
-dependencies = ["numpy"]
+packages = [{ include = "AnonymiGraph", from = "src" }]
+dependencies = ["numpy", "networkx"]
 
 [tool.flit.module]
-name = "python_package"
+name = "AnonymiGraph"
 
 [project.optional-dependencies]
 dev = ["black==23.3.0", "pre-commit==3.3.1"]
