@@ -1,8 +1,8 @@
-**[Documentation](https://jan-meissner.github.io/tbd/)** |
+**[Documentation](https://jan-meissner.github.io/AnonymiGraph/)** |
 
-# Project Name
+# AnonymiGraph
 
-Brief description of the project.
+Anonymization and Privacy Preserving Algorithms for Graphs in Python.
 
 ## Table of Contents
 - [Codespaces: Development Without Installations](#codespaces-development-without-installations)
