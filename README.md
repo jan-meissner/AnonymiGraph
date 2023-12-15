@@ -56,6 +56,4 @@ For local development, you can install the project by following these steps:
 
 Provide instructions on how to use the project after installation.
 
-## License
-
 Include information about the project's license here.
