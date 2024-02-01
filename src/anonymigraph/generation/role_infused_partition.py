@@ -6,7 +6,7 @@ from numba import njit, prange
 
 
 @njit(parallel=True)
-def _generate_adjacency_and_features(c: int, n: int, p: float, omega_role: np.array):
+def _generate_adjacency_and_features(c: int, n: int, p: float, omega_role: np.ndarray):
     """generates Role-Infused Partition Model's probabilistic adjacency matrix and features"""
     k = omega_role.shape[0]
     total_nodes = c * n * k
@@ -27,7 +27,7 @@ def _generate_adjacency_and_features(c: int, n: int, p: float, omega_role: np.ar
 
 
 @njit(parallel=True)
-def _sample_graph(prob_adj_matrix):
+def _sample_graph(prob_adj_matrix: np.ndarray):
     """Samples a adjacency matrix from a probabilistic adjacency matrix inplace."""
     n = prob_adj_matrix.shape[0]
 
@@ -40,7 +40,9 @@ def _sample_graph(prob_adj_matrix):
             prob_adj_matrix[i, j] = prob_adj_matrix[j, i] = val
 
 
-def role_infused_partition(c: int, n: int, p: float, omega_role: np.array, seed=None, return_networkx_graph=True):
+def role_infused_partition(
+    c: int, n: int, p: float, omega_role: np.ndarray, seed: int = None, return_networkx_graph: bool = True
+):
     """
     Generates a random role-infused partition graph as a NetworkX graph.
     Each node has two integer labels that indicate it's community and role.
@@ -55,6 +57,7 @@ def role_infused_partition(c: int, n: int, p: float, omega_role: np.array, seed=
     p (float): Probability of inter-community connections.
     omega_role (numpy.ndarray): Connection probabilities between roles within the same community.
     seed (int, optional): Random seed for reproducibility.
+    return_networkx_graph (bool, optiona): If true returns a networkx graph, else the adjacency and feature matrix.
 
     Returns:
     numpy.ndarray: Sampled adjacency matrix of the graph.
