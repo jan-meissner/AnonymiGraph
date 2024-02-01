@@ -5,6 +5,7 @@
 Anonymization and Privacy Preserving Algorithms for Graphs in Python.
 
 ## Table of Contents
+
 - [Codespaces: Development Without Installations](#codespaces-development-without-installations)
 - [Installation](#installation)
   - [From Git Repository](#from-git-repository)
@@ -19,7 +20,7 @@ GitHub Codespaces simplifies development by providing a cloud-based environment 
 
 1. Navigate to the GitHub repository.
 2. Click on the 'Code' button and select 'Open with Codespaces'.
-4. Once the environment is set up, you're ready to go - no additional setup required!
+3. Once the environment is set up, you're ready to go - no additional setup required!
 
 ## Installation
 
@@ -50,6 +51,10 @@ For local development, you can install the project by following these steps:
 4. Set up pre-commits:
    ```bash
    pre-commit install
+   ```
+5. Run pytest to check if your setup worked
+   ```bash
+   pytest .
    ```
 
 ## Usage

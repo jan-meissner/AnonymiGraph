@@ -66,9 +66,6 @@ def role_infused_partition(c: int, n: int, p: float, omega_role: np.array, seed=
     adj_matrix, feature_matrix = _generate_adjacency_and_features(c, n, p, omega_role)
     _sample_graph(adj_matrix)
 
-    if not np.array_equal(adj_matrix, adj_matrix.T):
-        raise ValueError("Matrix is not symmetric. This is not a user error, but a bug please report this bug.")
-
     if return_networkx_graph:
         G = nx.from_numpy_array(adj_matrix)
         for node_id, features in enumerate(feature_matrix):
