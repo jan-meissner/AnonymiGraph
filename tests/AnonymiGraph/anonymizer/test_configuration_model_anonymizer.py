@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import networkx as nx
 
-from anonymigraph.anonymizer import ConfigurationModelAnonymizer
+from anonymigraph.anonymization import ConfigurationModelAnonymizer
 
 
 def test_empty_graph():
