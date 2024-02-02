@@ -36,7 +36,7 @@ def k_degree_anonymity(G: nx.Graph, k: int, noise: int = 10, with_deletions: boo
 
     Ga = _k_deg(G, k, noise=noise, with_deletions=with_deletions)
 
-    for node in G.nodes():  # Copy over node attributes
-        Ga.nodes[node] = G.nodes[node]
+    for node, data in G.nodes(data=True):
+        Ga.nodes[node].update(data)
 
     return Ga
