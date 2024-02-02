@@ -8,7 +8,7 @@ from itertools import chain
 import networkx as nx
 import pytest
 
-from anonymigraph.anonymizer import ConfigurationModelAnonymizer
+from anonymigraph.anonymization import ConfigurationModelAnonymizer
 
 
 # Source: Tews, Mara. "Privacy-Aware Network Sharing with High Utility," 2023
