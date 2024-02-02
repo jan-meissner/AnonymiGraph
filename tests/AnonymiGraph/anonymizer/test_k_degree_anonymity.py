@@ -7,15 +7,14 @@ import networkx as nx
 
 from anonymigraph.anonymization import k_degree_anonymity
 
-
-def write_graph(G, fname):
-    """
-    Use this function to save graphs used for the test case.
-    """
-    # write_graph(G, "graph.json")
-    # write_graph(Ga,"graph_anon.json")
-    with open(fname, "w") as file:
-        json.dump(list(G.edges()), file)
+# def write_graph(G, fname):
+#    """
+#    Use this function to save graphs used for the test case.
+#    """
+#    # write_graph(G, "graph.json")
+#    # write_graph(Ga,"graph_anon.json")
+#    with open(fname, "w") as file:
+#       json.dump(list(G.edges()), file)
 
 
 def load_graph(fname):
