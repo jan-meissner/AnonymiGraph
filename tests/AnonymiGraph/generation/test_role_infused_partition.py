@@ -54,7 +54,7 @@ def test_role_infused_partition():
     c, n, p = 7, 10, 0.5
     omega_role = np.array([[0.8, 0.2], [0.2, 0.8]])
 
-    graph = role_infused_partition(c, n, p, omega_role, seed=42)
+    graph = role_infused_partition(c, n, p, omega_role, random_seed=42)
 
     assert isinstance(graph, nx.Graph)
     assert len(graph.nodes) == c * n * 2
