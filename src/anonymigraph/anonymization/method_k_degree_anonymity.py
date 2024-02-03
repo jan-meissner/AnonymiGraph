@@ -3,7 +3,7 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 
-from .external.k_degree_anonymity import k_degree_anonymity as _k_deg
+from ._external.k_degree_anonymity import k_degree_anonymity as _k_deg
 
 
 def k_degree_anonymity(G: nx.Graph, k: int, noise: int = 10, with_deletions: bool = True, random_seed=None) -> nx.Graph:

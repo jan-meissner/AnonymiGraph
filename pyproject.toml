@@ -40,3 +40,7 @@ exclude = [
     "swagger_client",
 ]
 ignore = ["E722", "B001", "W503", "E203", "W292"]
+
+[tool.coverage.run]
+source = ["anonymigraph"]
+omit = ["src/anonymigraph/anonymization/_external/*"]
