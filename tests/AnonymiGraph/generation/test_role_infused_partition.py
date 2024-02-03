@@ -34,7 +34,7 @@ def test_sample_graph_basic():
     prob_matrix = (prob_matrix + prob_matrix.T) / 2
     np.fill_diagonal(prob_matrix, 0)
 
-    _sample_graph(prob_matrix)
+    _sample_graph(prob_matrix, random_seed=0)
 
     assert np.all(np.isin(prob_matrix, [0, 1])), "Matrix contains non-binary values"
     assert np.array_equal(prob_matrix, prob_matrix.T), "Matrix is not symmetric after sampling"
@@ -54,7 +54,7 @@ def test_role_infused_partition():
     c, n, p = 7, 10, 0.5
     omega_role = np.array([[0.8, 0.2], [0.2, 0.8]])
 
-    graph = role_infused_partition(c, n, p, omega_role, seed=42)
+    graph = role_infused_partition(c, n, p, omega_role, random_seed=42)
 
     assert isinstance(graph, nx.Graph)
     assert len(graph.nodes) == c * n * 2

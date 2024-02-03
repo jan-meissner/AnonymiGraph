@@ -27,11 +27,13 @@ def _generate_adjacency_and_features(c: int, n: int, p: float, omega_role: np.nd
 
 
 @njit(parallel=True)
-def _sample_graph(prob_adj_matrix: np.ndarray):
+def _sample_graph(prob_adj_matrix: np.ndarray, random_seed: int):
     """Samples a adjacency matrix from a probabilistic adjacency matrix inplace."""
     n = prob_adj_matrix.shape[0]
 
     for i in prange(n):
+        if random_seed is not None:
+            np.random.seed(i + random_seed)
         for j in range(i + 1, n):
             if np.random.rand() <= prob_adj_matrix[i, j]:
                 val = 1
@@ -41,7 +43,7 @@ def _sample_graph(prob_adj_matrix: np.ndarray):
 
 
 def role_infused_partition(
-    c: int, n: int, p: float, omega_role: np.ndarray, seed: int = None, return_networkx_graph: bool = True
+    c: int, n: int, p: float, omega_role: np.ndarray, random_seed: int = None, return_networkx_graph: bool = True
 ):
     """
     Generates a random role-infused partition graph as a NetworkX graph.
@@ -56,18 +58,18 @@ def role_infused_partition(
     n (int): Number of nodes per role.
     p (float): Probability of inter-community connections.
     omega_role (numpy.ndarray): Connection probabilities between roles within the same community.
-    seed (int, optional): Random seed for reproducibility.
+    random_seed (int, optional): Random seed for reproducibility.
     return_networkx_graph (bool, optiona): If true returns a networkx graph, else the adjacency and feature matrix.
 
     Returns:
     numpy.ndarray: Sampled adjacency matrix of the graph.
     numpy.ndarray: Feature matrix.
     """
-    if seed is not None:
-        np.random.seed(seed)
+    if random_seed is not None:
+        np.random.seed(random_seed)
 
     adj_matrix, feature_matrix = _generate_adjacency_and_features(c, n, p, omega_role)
-    _sample_graph(adj_matrix)
+    _sample_graph(adj_matrix, random_seed)
 
     if return_networkx_graph:
         G = nx.from_numpy_array(adj_matrix)
