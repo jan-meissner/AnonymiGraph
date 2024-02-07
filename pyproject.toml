@@ -18,7 +18,7 @@ name = "anonymigraph"
 [project.optional-dependencies]
 dev = ["black==23.3.0", "pre-commit==3.3.1"]
 test = ["pytest", "pytest-cov"]
-full = ["jupyter"]
+full = ["jupyter", "matplotlib"]
 
 [tool.black]
 line-length = 120
