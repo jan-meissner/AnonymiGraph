@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import networkx as nx
 import numpy as np
 
@@ -34,7 +32,15 @@ def k_degree_anonymity(G: nx.Graph, k: int, noise: int = 10, with_deletions: boo
     if random_seed:
         np.random.seed(random_seed)
 
-    Ga = _k_deg(G, k, noise=noise, with_deletions=with_deletions)
+    # Relabel nodes from 1 to num_nodes
+    mapping = {node: i for i, node in enumerate(G.nodes())}
+    G_copy = nx.relabel_nodes(G, mapping, copy=True)
+
+    Ga = _k_deg(G_copy, k, noise=min(noise, G.number_of_nodes()), with_deletions=with_deletions)
+
+    # Reverse relabeling of nodes
+    reverse_mapping = {v: k for k, v in mapping.items()}
+    Ga = nx.relabel_nodes(Ga, reverse_mapping, copy=True)
 
     for node, data in G.nodes(data=True):
         Ga.nodes[node].update(data)
