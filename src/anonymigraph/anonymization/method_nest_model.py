@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
 
+from anonymigraph.utils import _validate_input_graph
+
 from ._external.nest_model.fast_rewire import get_block_indices, rewire_fast, sort_edges
 from ._external.nest_model.fast_wl import WL_fast
 
@@ -41,6 +43,8 @@ def nest_model(
     if depth == 0:
         raise ValueError("Algorithm undefined for d=0, please choose d>0.")
 
+    _validate_input_graph(G)
+
     edges = np.array(G.edges, dtype=np.uint32)
     bidirectional_edges = np.row_stack((edges, edges[:, [1, 0]]))
 
@@ -54,13 +58,16 @@ def nest_model(
         random_seed=random_seed,
     )
 
-    G_out = nx.Graph()
-    G_out.add_nodes_from(G.nodes())
-    G_out.add_edges_from(edges_rewired)
+    Ga = nx.Graph()
+    Ga.add_nodes_from(G.nodes())
+    Ga.add_edges_from(edges_rewired)
+
+    for node, data in G.nodes(data=True):
+        Ga.nodes[node].update(data)
 
     # _validate_nest(G, G_out, depth, initial_colors)
 
-    return G_out
+    return Ga
 
 
 def _rewire(edges, colors, r=1, parallel=True, random_seed=None):

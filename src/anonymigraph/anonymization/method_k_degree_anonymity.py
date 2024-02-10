@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
 
+from anonymigraph.utils import _validate_input_graph
+
 from ._external.k_degree_anonymity import k_degree_anonymity as _k_deg
 
 
@@ -28,19 +30,12 @@ def k_degree_anonymity(G: nx.Graph, k: int, noise: int = 10, with_deletions: boo
     Implementation:
     Uses the implementation by Rossi as a base. https://github.com/blextar/graph-k-degree-anonymity/tree/master
     """
+    _validate_input_graph(G)
 
     if random_seed:
         np.random.seed(random_seed)
 
-    # Relabel nodes from 1 to num_nodes
-    mapping = {node: i for i, node in enumerate(G.nodes())}
-    G_copy = nx.relabel_nodes(G, mapping, copy=True)
-
-    Ga = _k_deg(G_copy, k, noise=min(noise, G.number_of_nodes()), with_deletions=with_deletions)
-
-    # Reverse relabeling of nodes
-    reverse_mapping = {v: k for k, v in mapping.items()}
-    Ga = nx.relabel_nodes(Ga, reverse_mapping, copy=True)
+    Ga = _k_deg(G, k, noise=min(noise, G.number_of_nodes()), with_deletions=with_deletions)
 
     for node, data in G.nodes(data=True):
         Ga.nodes[node].update(data)
