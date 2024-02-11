@@ -6,12 +6,12 @@ import numpy as np
 from anonymigraph.anonymization._external.nest_model.fast_wl import WL_fast
 from anonymigraph.utils import _validate_input_graph
 
-from .metric_distribution import DistributionMetric
+from .abstract_node_metric import AbstractNodeMetric
 
 logger = logging.getLogger(__name__)
 
 
-class WLColorMetric(DistributionMetric):
+class WLColorMetric(AbstractNodeMetric):
     def __init__(self, depth):
         """
         Metric that is computed by comparing the distance between two color Weisfeiler Lehman Coloring
@@ -21,6 +21,10 @@ class WLColorMetric(DistributionMetric):
         """
         self.depth = depth
         super().__init__(f"TVD WL Colors d={self.depth}")
+
+    def _total_variation_distance(self, p, q):
+        """Calculate the Total Variation Distance."""
+        return 0.5 * np.sum(np.abs(p - q))
 
     def evaluate(self, G: nx.Graph, Ga: nx.Graph):
         _validate_input_graph(G)
@@ -42,7 +46,7 @@ class WLColorMetric(DistributionMetric):
 
         # Can't use Wasserstein distance as there is no distance between colors
         # Instead using TVD (Which is wasserstein but with d(x,y) = 1_x!=y)
-        return _total_variation_distance(G_dist, Ga_dist)
+        return self._total_variation_distance(G_dist, Ga_dist)
 
 
 def _labels_to_prob_dists(p_labels, q_labels):
@@ -60,11 +64,6 @@ def _labels_to_prob_dists(p_labels, q_labels):
     np.add.at(q_prob_dist, q_indices, 1)
 
     return p_prob_dist / len(p_labels), q_prob_dist / len(q_labels)
-
-
-def _total_variation_distance(p, q):
-    """Calculate the Total Variation Distance."""
-    return 0.5 * np.sum(np.abs(p - q))
 
 
 # def _kl_divergence(p, q):

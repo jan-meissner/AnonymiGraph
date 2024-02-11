@@ -207,7 +207,7 @@ def k_degree_anonymity(G, k, noise=10, with_deletions=False):
 
     while Ga is None:
         attempt += 1
-        logger.info("Attempt number", attempt)
+        logger.info(f"Attempt number {attempt}")
 
         anonymised_sequence = anonymize_sequence(dv, k, with_deletions)
         dv = _probing(dv, noise)

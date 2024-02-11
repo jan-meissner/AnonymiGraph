@@ -3,7 +3,7 @@ import networkx as nx
 from anonymigraph.metrics.metric import Metric
 
 
-class ScalarMetric(Metric):
+class AbstractGraphMetric(Metric):
     def compute_scalar(self, G: nx.Graph):
         raise NotImplementedError("Subclass must implement abstract method")
 

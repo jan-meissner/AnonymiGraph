@@ -1,6 +1,6 @@
 import numpy as np
 
-from anonymigraph.metrics.utility.structural.node.wl_color_distribution import (
+from anonymigraph.metrics.utility.structural.node_property_wl_colors import (
     _labels_to_prob_dists,
 )
 

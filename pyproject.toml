@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8.1"
 dynamic = ["version"]
 packages = [{ include = "anonymigraph", from = "src" }]
-dependencies = ["numpy", "networkx", "numba"]
+dependencies = ["numpy", "networkx", "numba", "scipy", "graphblas-algorithms"]
 
 [tool.flit.module]
 name = "anonymigraph"
