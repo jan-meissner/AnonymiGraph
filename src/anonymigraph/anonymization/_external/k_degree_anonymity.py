@@ -3,10 +3,12 @@
 # Based on Liu & Terzi's k-degree anonymity:
 # [1] https://dl.acm.org/doi/10.1145/1376616.1376629
 
-from __future__ import annotations
+import logging
 
 import networkx as nx
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def _sort_dv(dv):
@@ -205,7 +207,7 @@ def k_degree_anonymity(G, k, noise=10, with_deletions=False):
 
     while Ga is None:
         attempt += 1
-        print("Attempt number", attempt)
+        logger.info(f"Attempt number {attempt}")
 
         anonymised_sequence = anonymize_sequence(dv, k, with_deletions)
         dv = _probing(dv, noise)
@@ -215,6 +217,6 @@ def k_degree_anonymity(G, k, noise=10, with_deletions=False):
 
         Ga = _priority(anonymised_sequence, G)
         if Ga is None:
-            print("The sequence is valid but the graph construction failed")
+            logger.info("The sequence is valid but the graph construction failed")
 
     return Ga

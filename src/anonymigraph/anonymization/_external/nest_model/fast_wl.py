@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from numba import njit
-from numba.types import uint32, uint64
+from numba.types import int64, uint32, uint64
 
 
 @njit(cache=True)
@@ -34,14 +34,14 @@ def my_bincount(arr, min_lenght=-1):
         m = arr.max()  # pragma: no cover
     else:
         m = min_lenght
-    out = np.zeros(m + 1, dtype=arr.dtype)
+    out = np.zeros(int(m + 1), dtype=arr.dtype)
     for i in range(len(arr)):
         out[arr[i]] += 1
     return out
 
 
-@njit([(uint32[:, :],), (uint64[:, :],)], cache=True)
-def to_in_neighbors(edges):
+@njit(cache=True)
+def to_in_neighbors(edges, min_lenght=-1):
     """transforms the edges into two arrays the first arrays indicates ranges into the second array
         the second array contains the in neighbors of those nodes indicated in array 1
     input :
@@ -53,7 +53,7 @@ def to_in_neighbors(edges):
     starting_positions[i] ..starting_positions[i+1] contains all in neighbors of node i
     in_neighbors
     """
-    in_degrees = my_bincount(edges[:, 1], min_lenght=edges.max())
+    in_degrees = my_bincount(edges[:, 1], min_lenght)  # min_lenght=edges.max()
 
     # starting_positions[i] ..starting_positions[i+1] contains all in neighbors of node i
     starting_positions = np.empty(in_degrees.shape[0] + 1, dtype=np.uint32)
@@ -101,7 +101,7 @@ def WL_fast(edges, num_nodes=None, labels=None, max_iter=None):
     edges2 = np.empty_like(edges)
     edges2[:, 0] = edges[:, 1]
     edges2[:, 1] = edges[:, 0]
-    startings, neighbors, _ = to_in_neighbors(edges2)
+    startings, neighbors, _ = to_in_neighbors(edges2, num_nodes - 1)
 
     labelings = _wl_fast2(startings, neighbors, labels, max_iter)
 

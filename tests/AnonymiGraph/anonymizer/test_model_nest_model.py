@@ -7,7 +7,7 @@ import anonymigraph.anonymization as anon
 
 def test_nest_model():
     G = nx.erdos_renyi_graph(1000, 15 / 1000)
-    G.add_nodes_from([1000000])  # add isolate
+    G.add_nodes_from([1000])  # add isolate
 
     depth = 2
     G_nest = anon.nest_model(G, depth=depth, r=80)
