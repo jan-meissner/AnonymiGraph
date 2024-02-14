@@ -14,19 +14,19 @@ class AbstractGraphMetric(AbstractMetric):
         """
         Computes a scalar value metric for a given graph.
 
-        Parameters:
+        Args:
             G (nx.Graph): The graph to compute the scalar metric for.
 
         Returns:
             Any: The scalar value representing the computed metric for the graph.
         """
-        raise NotImplementedError("Subclass must implement abstract method")
+        raise NotImplementedError("Subclass implements this method")
 
     def evaluate(self, G: nx.Graph, Ga: nx.Graph):
         """
         Default evaluation method for scalar graph metrics.
 
-        Returns
+        Returns:
             dict: Scalar metric for both G and Ga as a dict.
         """
         num_G = self.compute_scalar(G)

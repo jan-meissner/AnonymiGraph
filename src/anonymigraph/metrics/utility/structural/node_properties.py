@@ -13,7 +13,7 @@ class DegreeCentralityMetric(AbstractNodeMetric):
     """
 
     def __init__(self):
-        super().__init__(pass_graph_as_graphblas=True)
+        super().__init__()  # graphblas = True causes floating point errors
 
     def compute_node_distribution(self, G: nx.Graph):
         return list(nx.degree_centrality(G).values())
@@ -37,6 +37,9 @@ class EigenvectorMetric(AbstractNodeMetric):
         super().__init__(pass_graph_as_graphblas=True)
         self.args = args
         self.kwargs = kwargs
+
+        if "max_iter" not in self.kwargs:
+            self.kwargs["max_iter"] = 1000
 
     def compute_node_distribution(self, G: nx.Graph):
         return list(nx.eigenvector_centrality(G, *self.args, **self.kwargs).values())

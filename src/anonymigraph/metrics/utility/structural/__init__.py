@@ -9,6 +9,9 @@ __all__ = [
     "NumberOfEdgesMetric",
     "NumberOfNodesMetric",
     "NumberOfTrianglesMetric",
+    "MeanDegreeMetric",
+    "MaxDegreeMetric",
+    "MedianDegreeMetric",
     "AverageClusteringCoefficientMetric",
     "TransitivityMetric",
 ]
@@ -16,6 +19,9 @@ __all__ = [
 from .graph_properties import (
     AverageClusteringCoefficientMetric,
     ConnectedComponentsMetric,
+    MaxDegreeMetric,
+    MeanDegreeMetric,
+    MedianDegreeMetric,
     NumberOfEdgesMetric,
     NumberOfNodesMetric,
     NumberOfTrianglesMetric,

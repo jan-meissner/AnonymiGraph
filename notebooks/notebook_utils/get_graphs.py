@@ -2,13 +2,16 @@ import networkx as nx
 import numpy as np
 
 
-def generate_power_law_graph(num_nodes, exponent):
+def generate_power_law_graph(num_nodes, exponent, random_seed=None):
+    if random_seed is not None:
+        np.random.seed(random_seed)
+
     degrees = np.random.zipf(a=exponent, size=num_nodes)
     degrees = [d for d in degrees if 0 < d < num_nodes]
     if sum(degrees) % 2 == 1:
         degrees[-1] += 1
 
-    G = nx.configuration_model(degrees)
+    G = nx.configuration_model(degrees, seed=random_seed)
     G = nx.Graph(G)
     G.remove_edges_from(nx.selfloop_edges(G))
 

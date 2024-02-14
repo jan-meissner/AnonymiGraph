@@ -7,18 +7,14 @@ from .abstract_anonymizer import AbstractAnonymizer
 
 
 class ConfigurationModelAnonymizer(AbstractAnonymizer):
-    def anonymize(self, graph: nx.Graph) -> nx.Graph:
-        """
-        Anonymizes a given undirected network graph using a configuration model approach.
+    """
+    (Obsolete)
+    Anonymizes a given undirected network graph using a configuration model approach.
 
-        Based on the algorithm outlined in Tews, Mara. “Privacy-Aware Network Sharing with High Utility,” 2023.
+    Based on the algorithm outlined in Tews, Mara. “Privacy-Aware Network Sharing with High Utility,” 2023.
+    """
 
-        Args:
-            graph (nx.Graph): A NetworkX graph object representing the network to be anonymized.
-
-        Returns:
-            nx.Graph: The anonymized graph, where node connections have been reconfigured.
-        """
+    def anonymize(self, graph: nx.Graph, random_seed=None) -> nx.Graph:
         if nx.is_empty(graph):
             return graph
 

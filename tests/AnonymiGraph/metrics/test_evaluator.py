@@ -8,6 +8,9 @@ from anonymigraph.metrics.utility.structural import (  # ClosenessCentralityMetr
     DegreeCentralityMetric,
     EigenvectorMetric,
     LocalClusteringCoefficientMetric,
+    MaxDegreeMetric,
+    MeanDegreeMetric,
+    MedianDegreeMetric,
     NumberOfEdgesMetric,
     NumberOfNodesMetric,
     NumberOfTrianglesMetric,
@@ -19,17 +22,20 @@ from anonymigraph.metrics.utility.structural import (  # ClosenessCentralityMetr
 
 def test_utilites_identical():
     metrics = {
-        "|Nodes|": NumberOfNodesMetric(),
-        "|Edges|": NumberOfEdgesMetric(),
-        "|Triangles|": NumberOfTrianglesMetric(),
-        "|Connected Components|": ConnectedComponentsMetric(),
+        "|V|": NumberOfNodesMetric(),
+        "|E|": NumberOfEdgesMetric(),
+        "|Δ|": NumberOfTrianglesMetric(),
+        "|CC|": ConnectedComponentsMetric(),
+        "Median Deg.": MedianDegreeMetric(),
+        "Avg. Deg.": MeanDegreeMetric(),
+        "Max Deg.": MaxDegreeMetric(),
         "Transitivity": TransitivityMetric(),
-        "Average Clustering": AverageClusteringCoefficientMetric(),
+        "Avg. Clustering": AverageClusteringCoefficientMetric(),
         "Degree Centrality": DegreeCentralityMetric(),
         "Eigenvector Centrality": EigenvectorMetric(),
         "TVD WL Colors d=2": WLColorMetric(depth=2),
         "PageRank": PageRankMetric(),
-        "Local Clustering Coefficien": LocalClusteringCoefficientMetric(),
+        "Local Clustering Coefficient": LocalClusteringCoefficientMetric(),
     }
 
     evaluator = Evaluator(metrics, use_graphblas=True)

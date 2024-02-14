@@ -5,32 +5,21 @@ from anonymigraph.utils import _validate_input_graph
 
 from ._external.nest_model.fast_rewire import get_block_indices, rewire_fast, sort_edges
 from ._external.nest_model.fast_wl import WL_fast
+from .abstract_anonymizer import AbstractAnonymizer
 
 
-def nest_model(
-    G: nx.Graph,
-    depth: int,
-    r: int = 1,
-    initial_colors: np.ndarray = None,
-    parallel: bool = False,
-    random_seed: int = None,
-):
+class NestModelAnonymizer(AbstractAnonymizer):
     """
     Generates a synthetic graph that preserves the d-hop neighborhood structure of a given graph.
     This function implements the nest model as defined in Stamm et al. (2023).
 
-    Parameters:
+    Args:
         G (nx.Graph): The input graph from which to sample the synthetic graph.
         depth (int): Specifies the 'hop' depth in the graph to be preserved in the synthetic version.
                      For example a depth of 1 preserves the 1-hop structure i.e. the degree.
         r (int, optional): Multiplier for the number of edge swap attempts.
                            Total swap attempts are r * num_edges.
-        initial_colors (np.ndarray, optional): Initial color labels for the Weisfeiler-Lehman algorithm.
         parallel (bool, optional): Enables parallelization of the process.
-        random_seed (int, optional): Seed for the random number generator.
-
-    Returns:
-        nx.Graph: The generated synthetic graph.
 
     References:
         Stamm, F. I., Scholkemper, M., Strohmaier, M., & Schaub, M. T. (2023).
@@ -40,46 +29,55 @@ def nest_model(
     Implementation based on:
         https://github.com/Feelx234/nestmodel
     """
-    if depth == 0:
-        raise ValueError("Algorithm undefined for d=0, please choose d>0.")
 
-    _validate_input_graph(G)
+    def __init__(self, depth, r=1, parallel=False):
+        self.depth = depth
+        self.r = r
+        self.parallel = parallel
 
-    edges = np.array(G.edges, dtype=np.uint32)
-    bidirectional_edges = np.row_stack((edges, edges[:, [1, 0]]))
+    def anonymize(self, G: nx.Graph, random_seed: int = None, initial_colors=None) -> nx.Graph:
+        """
+        Anonymize and return the anonymized graph.
 
-    all_depth_colors = WL_fast(bidirectional_edges, num_nodes=None, labels=initial_colors, max_iter=depth)
+        Args:
+            graph (nx.Graph): The original graph that is to be anonymized.
+            random_seed (int, optional): Seed for the random number generator.
+            initial_colors (np.ndarray, optional): Initial color labels for the Weisfeiler-Lehman algorithm.
 
-    edges_rewired = _rewire(
-        edges,
-        all_depth_colors[-1].reshape(1, -1),
-        r=r,
-        parallel=parallel,
-        random_seed=random_seed,
-    )
+        Returns:
+            nx.Graph: The anonymized graph.
+        """
+        if self.depth == 0:
+            raise ValueError("Algorithm undefined for d=0, please choose d>0.")
 
-    Ga = nx.Graph()
-    Ga.add_nodes_from(G.nodes())
-    Ga.add_edges_from(edges_rewired)
+        _validate_input_graph(G)
 
-    for node, data in G.nodes(data=True):
-        Ga.nodes[node].update(data)
+        edges = np.array(G.edges(), dtype=np.uint32)
+        bidirectional_edges = np.row_stack((edges, edges[:, [1, 0]]))
 
-    # _validate_nest(G, G_out, depth, initial_colors)
+        all_depth_colors = WL_fast(bidirectional_edges, labels=initial_colors, max_iter=self.depth)
 
-    return Ga
+        edges_rewired = _rewire(
+            edges, all_depth_colors[-1].reshape(1, -1), r=self.r, parallel=self.parallel, random_seed=random_seed
+        )
+
+        Ga = nx.Graph()
+        Ga.add_nodes_from(G.nodes(data=True))
+        Ga.add_edges_from(edges_rewired)
+
+        return Ga
 
 
 def _rewire(edges, colors, r=1, parallel=True, random_seed=None):
     """
     Rewires an undirected graph's subgraphs based on partition labels.
 
-    Parameters:
-    - edges: np.ndarray (num_edges, 2), unique, arbitrarily oriented edges (each edge appears once)
-    - colors: np.ndarray (num_nodes,), color labels for nodes
-    - r: int, multiplier of edge swaps attempted (total swap attempts are r*num_edges)
-    - parallel: bool, enables parallelization
-    - random_seed: int, seed for random number generator. If set parallel also needs to be set to false.
+    Args:
+      edges: np.ndarray (num_edges, 2), unique, arbitrarily oriented edges (each edge appears once)
+      colors: np.ndarray (num_nodes,), color labels for nodes
+      r: int, multiplier of edge swaps attempted (total swap attempts are r*num_edges)
+      parallel: bool, enables parallelization
+      random_seed: int, seed for random number generator. If set parallel also needs to be set to false.
     """
     edges_ordered, edges_classes, dead_arr, is_mono = sort_edges(edges, colors, is_directed=False)
     block_indices = get_block_indices(edges_classes, dead_arr)
@@ -102,10 +100,11 @@ def _validate_nest(G: nx.Graph, G_out: nx.Graph, depth: int, initial_colors: np.
     """
     Validate the Nest Model. Checks if all
 
-    :param G: Original graph.
-    :param G_out: Output graph from nest_model.
-    :param depth: Same parameter as in nest_model.
-    :param initial_colors  Same parameter as in nest_model.
+    Args:
+        G: Original graph.
+        G_out: Output graph from nest_model.
+        depth: Same parameter as in nest_model.
+        initial_colors  Same parameter as in nest_model.
     """
     edges = np.array(G.edges, dtype=np.uint32)
     edges_rewired = np.array(G_out.edges, dtype=np.uint32)
