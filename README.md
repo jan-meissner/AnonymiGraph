@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/jan-meissner/AnonymiGraph/graph/badge.svg?token=xQucrvH23K)](https://codecov.io/gh/jan-meissner/AnonymiGraph)
+[![Python CI](https://github.com/jan-meissner/AnonymiGraph/actions/workflows/CI.yml/badge.svg)](https://github.com/jan-meissner/AnonymiGraph/actions/workflows/CI.yml)
+
 **[Documentation](https://jan-meissner.github.io/AnonymiGraph/)** |
 
 # AnonymiGraph
