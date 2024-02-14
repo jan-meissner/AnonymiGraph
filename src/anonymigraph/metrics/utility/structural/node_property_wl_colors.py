@@ -21,8 +21,8 @@ class WLColorMetric(AbstractNodeMetric):
         """
         Initializes the class.
 
-        Parameters:
-        - depth (int): The depth of the WL algorithm, a depth of 1 calculates it from the 1-hop neighborhood (degree)
+        Args:
+            depth (int): The depth of the WL algorithm, a depth of 1 calculates it from the 1-hop neighborhood (degree)
                        a depth of 2 from the 2-hop neighborhood and so forth.
         """
         super().__init__()
@@ -30,6 +30,7 @@ class WLColorMetric(AbstractNodeMetric):
 
     def evaluate(self, G: nx.Graph, Ga: nx.Graph):
         """Calculates the WL-colors and compares the resulting color distributions using TVD."""
+
         _validate_input_graph(G)
         _validate_input_graph(Ga)
 

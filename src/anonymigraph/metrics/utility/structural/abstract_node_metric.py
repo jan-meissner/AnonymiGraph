@@ -14,13 +14,13 @@ class AbstractNodeMetric(AbstractMetric):
         """
         Computes the distribution of a node-level metric for a given graph.
 
-        Parameters:
+        Args:
             G (nx.Graph): The graph to compute the node metric distribution for.
 
         Returns:
             ArrayLike: An array-like object representing the distribution of the node metric.
         """
-        raise NotImplementedError("Subclass must implement abstract method")
+        raise NotImplementedError("Subclass implements this method.")
 
     def evaluate(self, G: nx.Graph, Ga: nx.Graph):
         """
@@ -40,12 +40,14 @@ class AbstractNodeMetric(AbstractMetric):
         This method can be overridden by subclasses to use different measures of distribution distances.
         Such as p-Wasserstein distance.
 
-        Parameters:
+        Args:
             valsP (ArrayLike): The distribution of the node-level metric for the original graph.
             valsQ (ArrayLike): The distribution of the node-level metric for the anonymized graph.
 
         Returns:
             float: The calculated distance between the two distributions.
         """
-
+        # from collections import Counter
+        # print(dict(sorted(Counter(valsP).items(), key=lambda item: item[0], reverse=True)))
+        # print(dict(sorted(Counter(valsQ).items(), key=lambda item: item[0], reverse=True)))
         return wasserstein_distance(valsP, valsQ)

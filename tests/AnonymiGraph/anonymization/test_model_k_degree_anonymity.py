@@ -5,7 +5,7 @@ import os
 
 import networkx as nx
 
-from anonymigraph.anonymization import k_degree_anonymity
+from anonymigraph.anonymization import KDegreeAnonymizer
 
 # def write_graph(G, fname):
 #    """
@@ -50,6 +50,6 @@ def test_ensuring_equivalence_with_original():
     expected_Ga = load_graph(graph_anon_path)
 
     k = 100
-    Ga = k_degree_anonymity(G, k, noise=10, with_deletions=True, random_seed=31221)
+    Ga = KDegreeAnonymizer(k, noise=10, with_deletions=True).anonymize(G, random_seed=31221)
 
     assert expected_Ga.edges() == Ga.edges()

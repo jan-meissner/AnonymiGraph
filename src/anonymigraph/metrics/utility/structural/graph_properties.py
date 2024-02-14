@@ -1,4 +1,5 @@
 import networkx as nx
+import numpy as np
 
 from .abstract_graph_metric import AbstractGraphMetric
 
@@ -22,6 +23,29 @@ class NumberOfNodesMetric(AbstractGraphMetric):
 
     def compute_scalar(self, G: nx.Graph):
         return G.number_of_nodes()
+
+
+class MaxDegreeMetric(AbstractGraphMetric):
+    """Determine the maximum degree of nodes in a graph."""
+
+    def compute_scalar(self, G: nx.Graph):
+        return max(dict(G.degree()).values())
+
+
+class MedianDegreeMetric(AbstractGraphMetric):
+    """Determine the median degree of nodes in a graph."""
+
+    def compute_scalar(self, G: nx.Graph):
+        degrees = list(dict(G.degree()).values())
+        return np.median(degrees)
+
+
+class MeanDegreeMetric(AbstractGraphMetric):
+    """Determine the mean degree of nodes in a graph."""
+
+    def compute_scalar(self, G: nx.Graph):
+        degrees = list(dict(G.degree()).values())
+        return np.mean(degrees)
 
 
 class NumberOfTrianglesMetric(AbstractGraphMetric):
