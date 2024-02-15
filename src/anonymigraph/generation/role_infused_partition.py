@@ -51,17 +51,17 @@ def role_infused_partition(
     Scholkemper, M., & Schaub, M. T. (2023). An Optimization-based Approach To Node Role Discovery in Networks:
     Approximating Equitable Partitions. arXiv preprint arXiv:2305.19087.
 
-    Parameters:
-    c (int): Number of communities.
-    n (int): Number of nodes per role.
-    p (float): Probability of inter-community connections.
-    omega_role (numpy.ndarray): Connection probabilities between roles within the same community.
-    random_seed (int, optional): Random seed for reproducibility.
-    return_networkx_graph (bool, optiona): If true returns a networkx graph, else the adjacency and feature matrix.
+    Args:
+        c (int): Number of communities.
+        n (int): Number of nodes per role.
+        p (float): Probability of inter-community connections.
+        omega_role (numpy.ndarray): Connection probabilities between roles within the same community.
+        random_seed (int, optional): Random seed for reproducibility.
+        return_networkx_graph (bool, optiona): If true returns a networkx graph, else the adjacency and feature matrix.
 
     Returns:
-    numpy.ndarray: Sampled adjacency matrix of the graph.
-    numpy.ndarray: Feature matrix.
+        numpy.ndarray: Sampled adjacency matrix of the graph.
+        numpy.ndarray: Feature matrix.
     """
     if random_seed is not None:
         np.random.seed(random_seed)

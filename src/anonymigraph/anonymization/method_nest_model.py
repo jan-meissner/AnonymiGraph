@@ -1,9 +1,9 @@
 import networkx as nx
 import numpy as np
 
+from anonymigraph.anonymization._external.nest_model._rewire import _rewire
 from anonymigraph.utils import _validate_input_graph
 
-from ._external.nest_model.fast_rewire import get_block_indices, rewire_fast, sort_edges
 from ._external.nest_model.fast_wl import WL_fast
 from .abstract_anonymizer import AbstractAnonymizer
 
@@ -35,6 +35,9 @@ class NestModelAnonymizer(AbstractAnonymizer):
         self.r = r
         self.parallel = parallel
 
+        if self.depth == 0:
+            raise ValueError("Algorithm undefined for d=0, please choose d>0.")
+
     def anonymize(self, G: nx.Graph, random_seed: int = None, initial_colors=None) -> nx.Graph:
         """
         Anonymize and return the anonymized graph.
@@ -47,9 +50,6 @@ class NestModelAnonymizer(AbstractAnonymizer):
         Returns:
             nx.Graph: The anonymized graph.
         """
-        if self.depth == 0:
-            raise ValueError("Algorithm undefined for d=0, please choose d>0.")
-
         _validate_input_graph(G)
 
         edges = np.array(G.edges(), dtype=np.uint32)
@@ -66,34 +66,6 @@ class NestModelAnonymizer(AbstractAnonymizer):
         Ga.add_edges_from(edges_rewired)
 
         return Ga
-
-
-def _rewire(edges, colors, r=1, parallel=True, random_seed=None):
-    """
-    Rewires an undirected graph's subgraphs based on partition labels.
-
-    Args:
-      edges: np.ndarray (num_edges, 2), unique, arbitrarily oriented edges (each edge appears once)
-      colors: np.ndarray (num_nodes,), color labels for nodes
-      r: int, multiplier of edge swaps attempted (total swap attempts are r*num_edges)
-      parallel: bool, enables parallelization
-      random_seed: int, seed for random number generator. If set parallel also needs to be set to false.
-    """
-    edges_ordered, edges_classes, dead_arr, is_mono = sort_edges(edges, colors, is_directed=False)
-    block_indices = get_block_indices(edges_classes, dead_arr)
-
-    rewire_fast(
-        edges_ordered,
-        edges_classes[:, 0],
-        is_mono[0],
-        block_indices[0],
-        is_directed=False,
-        seed=random_seed,
-        num_flip_attempts_in=r,
-        parallel=parallel,
-    )
-
-    return edges_ordered
 
 
 def _validate_nest(G: nx.Graph, G_out: nx.Graph, depth: int, initial_colors: np.ndarray = None):
