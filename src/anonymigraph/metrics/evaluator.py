@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Evaluator:
     """
-    Evaluator class for evaluating anonymization of graphs.
+    Evaluator class for evaluating anonymization techniques of graphs.
 
     Args:
         metrics (Dict[str, AbstractMetric]): A dictionary of metrics to be evaluated.
