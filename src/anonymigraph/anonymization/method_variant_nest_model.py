@@ -1,6 +1,6 @@
-import kmeans1d
 import networkx as nx
 import numpy as np
+import optimal1dclustering
 
 from anonymigraph.anonymization._external.nest_model._rewire import _rewire
 from anonymigraph.utils import _validate_input_graph
@@ -19,6 +19,8 @@ class VariantNestModelAnonymizer(AbstractAnonymizer):
     Args:
         G (nx.Graph): The input graph from which to sample the synthetic graph.
         k (int): Number of different node roles.
+        min_cluster_size (int, optional): Minimum size of each cluster. Defaults to 0, implying no minimum.
+        mode (int, optional): Cluster method to use for centrality to cluster: 1 for k-medians and 2 for k-means.
         r (int, optional): Multiplier for the number of edge swap attempts.
                            Total swap attempts are r * num_edges.
         parallel (bool, optional): Enables parallelization of the process.
@@ -28,13 +30,17 @@ class VariantNestModelAnonymizer(AbstractAnonymizer):
         Approximating Equitable Partitions. arXiv preprint arXiv:2305.19087.
     """
 
-    def __init__(self, k, r=1, parallel=False):
+    def __init__(self, k: int, min_cluster_size: int = 0, mode: int = 2, r: int = 1, parallel: bool = False):
         self.k = k
+        self.min_cluster_size = min_cluster_size
+        self.mode = mode
         self.r = r
         self.parallel = parallel
 
         if self.k == 0:
             raise ValueError("Algorithm undefined for k=0, please choose d>0.")
+
+        # mode=1 for k-medians, 2 for k-means (2 works better in tests)
 
     def anonymize(self, G: nx.Graph, random_seed: int = None) -> nx.Graph:
         """
@@ -66,5 +72,7 @@ class VariantNestModelAnonymizer(AbstractAnonymizer):
         _validate_input_graph(G)
         centrality_map = nx.eigenvector_centrality(G, max_iter=10000)
         centralities_ordered = [centrality_map[i] for i in range(G.number_of_nodes())]
-        colors, _ = kmeans1d.cluster(centralities_ordered, self.k)
+        colors, _ = optimal1dclustering.cluster(
+            centralities_ordered, self.k, mode=self.mode, min_cluster_size=self.min_cluster_size
+        )
         return np.array(colors)
