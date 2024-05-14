@@ -20,6 +20,7 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
+        args: ["--line-length", "120"]
 
   - repo: https://github.com/PyCQA/flake8
     rev: 6.1.0

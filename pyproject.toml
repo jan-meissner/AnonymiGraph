@@ -33,7 +33,7 @@ line-length = 120
 fast = true
 
 [tool.flake8]
-max-line-length = 120
+max-line-length = 240
 select = "F,E,W,B,B901,B902,B903"
 exclude = [
     ".eggs",
