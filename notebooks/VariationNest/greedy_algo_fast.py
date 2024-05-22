@@ -7,6 +7,10 @@ integer_list_type = types.ListType(types.int64)
 
 @njit
 def get_cluster_to_indices(cluster):
+    """
+    Returns a dict that holds for each cluster the indices of vertices inside the cluster.
+    Important: Returned indices are sorted in ascending order in the list.
+    """
     cluster_to_indices = Dict.empty(
         key_type=types.int64,
         value_type=integer_list_type,
@@ -147,7 +151,6 @@ def get_subtract_change_in_p_power_sum(potential_dense_vec, sparse_vec, p=2):
 @njit
 def get_sparse_cluster_sums(adjacency_dicts, cluster_to_indices):
     """
-
     Efficient sums
     """
     S_sparse = Dict.empty(
@@ -221,6 +224,130 @@ def get_sparse_p_power_sum(dict_of_sparse_vectors, p=2):
 
 
 @njit
+def get_objective(current_clusters, x, At_sparse, w, p=2):
+    cluster_to_indices = get_cluster_to_indices(current_clusters)  # O(n)
+    Sx = get_scalar_cluster_sums(x, cluster_to_indices)  # O(n)
+    SAt = get_sparse_cluster_sums(At_sparse, cluster_to_indices)  # O(|E|)
+    p_power_sum_SAt = get_sparse_p_power_sum(SAt, p=p)  # O(|E|)
+
+    obj = np.sum(x**p)
+    for c in cluster_to_indices:
+        cluster_indices = cluster_to_indices[c]
+        n_j = len(cluster_indices)
+
+        obj += -Sx[c] ** p / n_j + w * p_power_sum_SAt[c] / n_j
+
+    return obj
+
+
+@njit
+def move_split_cluster(current_clusters, cluster_to_indices, Sx, SAt, p_power_sum_SAt, At_sparse, x, w):
+    best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
+    best_delta_obj = 0
+
+    # Try split moves
+    for c in cluster_to_indices:
+        cluster_indices = cluster_to_indices[c]
+
+        # Cluster indices are assumed to be in
+        assert len(cluster_indices) > 0
+
+        n_j = len(cluster_indices)
+        Sx_j = Sx[c]  # S hold the sum over the vectors of all points in cluster j
+        SAt_j = SAt[c]
+        p_power_sum_SAt_j = p_power_sum_SAt[c]
+
+        n_j_prime = n_j
+        n_k_prime = 0
+
+        Sx_j_prime = Sx_j
+        Sx_k_prime = 0
+
+        SAt_j_prime = SAt_j.copy()
+        SAt_k_prime = Dict.empty(key_type=types.int64, value_type=types.int64)
+
+        # Further speed up
+        p_power_sum_SAt_j_prime = p_power_sum_SAt[c]
+        p_power_sum_SAt_k_prime = 0.0
+
+        best_loop_idx = -1
+        for loop_idx in range(len(cluster_indices) - 1):
+            # Check the cluster splitting of the first (sorted by x) loop_idx+1 many in the first cluster and all other in second cluster
+            i = cluster_indices[loop_idx]
+
+            n_j_prime = n_j_prime - 1
+            n_k_prime = n_k_prime + 1
+
+            # Calculate x objective loss component, Complexity with outer for loops: O(n)
+
+            Sx_j_prime = Sx_j_prime - x[i]
+            Sx_k_prime = Sx_k_prime + x[i]
+
+            delta_obj_x = compute_delta_obj(
+                Sx_j_prime**2, Sx_k_prime**2, n_j_prime, n_k_prime, Sx_j**2, 0, n_j, 1
+            )  # Sx_k is 0 so n_k can be arbitrary
+
+            # Calculate A^t objective loss component, Complexity with outer for loops: O(|E|)
+
+            p_power_sum_SAt_j_prime += get_subtract_change_in_p_power_sum(SAt_j_prime, At_sparse[i])
+            p_power_sum_SAt_k_prime += get_add_change_in_p_power_sum(SAt_k_prime, At_sparse[i])
+
+            inplace_subtract_sparse_vecs(SAt_j_prime, At_sparse[i])
+            inplace_add_sparse_vecs(SAt_k_prime, At_sparse[i])
+
+            # EXTREMELY SLOW ASSERT REMOVE WHEN RUNNING SERIOUSLY
+            # assert np.allclose(sparse_p_power_sum(SAt_j_prime), p_power_sum_SAt_j_prime)
+            # assert np.allclose(sparse_p_power_sum(SAt_k_prime), p_power_sum_SAt_k_prime)
+
+            delta_obj_A = compute_delta_obj(
+                p_power_sum_SAt_j_prime, p_power_sum_SAt_k_prime, n_j_prime, n_k_prime, p_power_sum_SAt_j, 0, n_j, 1
+            )  # SA_k is 0 so n_k can be arbitrary
+
+            delta_obj = -delta_obj_x + w * delta_obj_A
+            if delta_obj < best_delta_obj:
+                best_delta_obj = delta_obj
+                best_loop_idx = loop_idx
+
+        # assert np.allclose(Sx_j_prime, x[cluster_indices[len(cluster_indices) - 1]])
+
+        # Found a split that was better than currently best
+        if best_loop_idx > -1:
+            print(
+                "Found a better split at vertex best_split_index",
+                best_loop_idx,
+                "of",
+                len(cluster_indices),
+                "for cluster",
+                c,
+                "Best delta obj is now ",
+                best_delta_obj,
+            )
+            best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
+            new_cluster_index = np.max(current_clusters) + 1
+            for j in range(best_loop_idx + 1):
+                best_cluster_update[cluster_indices[j]] = new_cluster_index
+
+    return best_delta_obj, best_cluster_update
+
+
+# def move_swap_cluster(current_clusters, cluster_to_indices, Sx, SAt, p_power_sum_SAt, At_sparse, x, w):
+#    get_sorted_unique_clusters(current_clusters)#
+#
+#    return cluster_to_indices
+
+
+#    best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
+#    best_delta_obj = 0
+
+# Try split moves
+
+
+# 11111111111222222222233333333344444444444455
+# 11111111111222222222233333333344444444444455
+
+
+# TODO Speed up by only recalculating changed clusters between iterations, hence we also want to cache all the move types and make a queue out of them; re-adding them when they are update (i.e. the cluster they are for changed)
+# @njit(cache=False)
 def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000):
     assert np.array_equal(x, np.sort(x)), "x is not sorted!"
     assert inital_clusters.dtype.kind == "i"
@@ -231,93 +358,58 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000):
     edges_in_to_out = edges_out_to_in[:, ::-1]
     At_sparse = get_adjacency_dicts(edges_in_to_out, n)
 
+    print("Getting Initial Objective")
     current_clusters = inital_clusters
-    current_objective = 0
+    current_objective = get_objective(current_clusters, x, At_sparse, w, p=2)
 
+    print("Starting Iterating")
     for iteration in range(max_iter):
+        print("Starting new iteration")
         cluster_to_indices = get_cluster_to_indices(current_clusters)  # O(n)
         Sx = get_scalar_cluster_sums(x, cluster_to_indices)  # O(n)
         SAt = get_sparse_cluster_sums(At_sparse, cluster_to_indices)  # O(|E|)
         p_power_sum_SAt = get_sparse_p_power_sum(SAt)  # O(|E|)
+        print("Finished Iteration Init")
 
         best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
         best_delta_obj = 0
 
-        # Try split moves
-        for c in cluster_to_indices:
-            cluster_indices = cluster_to_indices[
-                c
-            ]  # This need to return a list of the indices in the cluster that is sorted in the same order of the original x. Do an assert
-            assert len(cluster_indices) > 0
+        # Uneven Split Moves;
+        # Complexity: O(|E|)
+        # Split 1vn-1 2vn-2 3vn-3 ... (sorted by katz centrality)
+        print("Performing split moves")
+        split_best_delta_obj, split_best_cluster_update = move_split_cluster(
+            current_clusters, cluster_to_indices, Sx, SAt, p_power_sum_SAt, At_sparse, x, w
+        )
+        if split_best_delta_obj < best_delta_obj:
+            best_delta_obj = split_best_delta_obj
+            best_cluster_update = split_best_cluster_update
 
-            n_j = len(cluster_indices)
-            Sx_j = Sx[c]  # S hold the sum over the vectors of all points in cluster j
-            SAt_j = SAt[c]
-            p_power_sum_SAt_j = p_power_sum_SAt[c]
+        # SWAP (from PAM for k-medoids)
+        # swap_best_delta_obj, swap_best_cluster_update = move_swap_cluster(current_clusters, cluster_to_indices, Sx, SAt, p_power_sum_SAt, At_sparse, x, w)
+        # if swap_best_delta_obj < best_delta_obj:
+        #    best_delta_obj = swap_best_delta_obj
+        #    best_cluster_update = swap_best_cluster_update
 
-            n_j_prime = n_j
-            n_k_prime = 0
+        # Partial Merge;
+        # Complexity O(|E|)
+        # Expand one cluster at the cost of another cluster
+        # Example: 11111111133334444444444 -> 11111444433334444444444
+        # Allows to undo "mistakes" of early uneven splits easily
 
-            Sx_j_prime = Sx_j
-            Sx_k_prime = 0
+        # BAD Try 2-swap moves O(n^2) (the minimum range idea doesn't work as for large graph clusters might be large too)
+        # for i in range(len(data)):
+        #   for j in range(i+1, len(data)):
+        #       a, b = initial_assignments[i], initial_assignments[j]
+        #       if a != b:
+        #           delta_obj = two_swap_delta(state_variables, i, j, a, b)
+        #           if delta_obj < best_delta_obj:
+        #               best_move = ('2-swap', i, j, a, b, delta_obj)
+        #               best_delta_obj = delta_obj
 
-            SAt_j_prime = SAt_j.copy()
-            SAt_k_prime = Dict.empty(key_type=types.int64, value_type=types.int64)
+        # The k-color adjacent color flip
 
-            # Further speed up
-            p_power_sum_SAt_j_prime = p_power_sum_SAt[c]
-            p_power_sum_SAt_k_prime = 0.0
-
-            best_loop_idx = -1
-            for loop_idx in range(len(cluster_indices) - 1):
-                # Check the cluster splitting of the first (sorted by x) loop_idx+1 many in the first cluster and all other in second cluster
-                i = cluster_indices[loop_idx]
-
-                n_j_prime = n_j_prime - 1
-                n_k_prime = n_k_prime + 1
-
-                # Calculate x objective loss component, Complexity with outer for loops: O(n)
-
-                Sx_j_prime = Sx_j_prime - x[i]
-                Sx_k_prime = Sx_k_prime + x[i]
-
-                delta_obj_x = compute_delta_obj(
-                    Sx_j_prime**2, Sx_k_prime**2, n_j_prime, n_k_prime, Sx_j**2, 0, n_j, 1
-                )  # Sx_k is 0 so n_k can be arbitrary
-
-                # Calculate A^t objective loss component, Complexity with outer for loops: O(|E|)
-
-                p_power_sum_SAt_j_prime += get_subtract_change_in_p_power_sum(SAt_j_prime, At_sparse[i])
-                p_power_sum_SAt_k_prime += get_add_change_in_p_power_sum(SAt_k_prime, At_sparse[i])
-
-                inplace_subtract_sparse_vecs(SAt_j_prime, At_sparse[i])
-                inplace_add_sparse_vecs(SAt_k_prime, At_sparse[i])
-
-                assert np.allclose(sparse_p_power_sum(SAt_j_prime), p_power_sum_SAt_j_prime)
-                assert np.allclose(sparse_p_power_sum(SAt_k_prime), p_power_sum_SAt_k_prime)
-
-                delta_obj_A = compute_delta_obj(
-                    p_power_sum_SAt_j_prime, p_power_sum_SAt_k_prime, n_j_prime, n_k_prime, p_power_sum_SAt_j, 0, n_j, 1
-                )  # SA_k is 0 so n_k can be arbitrary
-
-                # Check if split is better
-
-                # print("vertex is in:", i)
-                delta_obj = -delta_obj_x + w * delta_obj_A
-                if delta_obj < best_delta_obj:
-                    best_delta_obj = delta_obj
-                    best_loop_idx = loop_idx
-                    # print("Found a better split at vertex best_split_index", best_loop_idx, "for vertex ", i, "Best delta obj is now ", best_delta_obj)
-
-            assert np.allclose(Sx_j_prime, x[cluster_indices[len(cluster_indices) - 1]])
-
-            if best_loop_idx > -1:
-                best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
-                new_cluster_index = np.max(current_clusters) + 1
-                for j in range(best_loop_idx + 1):
-                    best_cluster_update[cluster_indices[j]] = new_cluster_index
-
-        # Try merge moves
+        # REPLACED BY PARTIAL MERGE: Try merge moves
         # for j in clusters:
         #    for k in clusters:
         #        if j != k and state_variables['n'][k] > 0:
@@ -326,7 +418,7 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000):
         #                best_move = ('merge', j, k)
         #                best_delta_obj = delta_obj
 
-        # Try 1-swap moves
+        # BAD O(n^2) Try 1-swap moves
         # for i in range(len(data)):
         #    for k in clusters:
         #        if initial_assignments[i] != k:
@@ -336,15 +428,6 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000):
         #                best_move = ('1-swap', i, j, k, delta_obj)
         #                best_delta_obj = delta_obj
 
-        # Try 2-swap moves
-        # for i in range(len(data)):
-        #    for j in range(i+1, len(data)):
-        #        a, b = initial_assignments[i], initial_assignments[j]
-        #        if a != b:
-        #            delta_obj = two_swap_delta(state_variables, i, j, a, b)
-        #            if delta_obj < best_delta_obj:
-        #                best_move = ('2-swap', i, j, a, b, delta_obj)
-        #                best_delta_obj = delta_obj
         if best_delta_obj >= 0:
             break  # No improvement found, stop the search
 
@@ -356,3 +439,6 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000):
         print("Iteration", iteration, "Objective:", current_objective)
 
     return current_clusters, current_objective
+
+
+# 2 swap worst
