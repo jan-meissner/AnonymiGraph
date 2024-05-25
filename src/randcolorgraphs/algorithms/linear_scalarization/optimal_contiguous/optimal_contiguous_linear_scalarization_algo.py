@@ -17,8 +17,8 @@ def optimal_contiguous_linear_scalarization_algo(x, A, w):
     S = get_cluster_segment_cost(sorted_x, sorted_A, w)
 
     n = len(sorted_x)
-    D = np.zeros((n + 1, n + 1)) + float("inf")
-    T = np.zeros((n + 1, n + 1), dtype=int)
+    D = np.full((n + 1, n + 1), np.inf, dtype=np.float64)
+    T = np.zeros((n + 1, n + 1), dtype=np.int64)
 
     # Base case
     for m in range(1, n + 1):
