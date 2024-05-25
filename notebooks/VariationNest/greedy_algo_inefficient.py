@@ -1,40 +1,9 @@
 import numpy as np
 from numba import njit
 
-
-@njit
-def compute_obj(v_K, A, clusters, w):
-    """
-    Compute the objective function value given the cluster assignment.
-
-    Parameters:
-    v_K (np.ndarray): The input data matrix (n_samples, n_features).
-    A (np.ndarray): The matrix A in the objective function (n_features, n_features).
-    clusters (list or np.ndarray): Cluster assignments for each data point (n_samples,).
-    w (float): The weight parameter.
-
-    Returns:
-    float: The value of the objective function.
-    """
-    unique_clusters = np.unique(clusters)
-
-    # Compute the norms for v_K and A
-    norm_v_K = np.sum(v_K**2)
-
-    sum_HvK = 0
-    sum_HAT = 0
-
-    for cluster in unique_clusters:
-        indices = np.where(clusters == cluster)[0]
-        n_j = len(indices)
-        assert n_j > 0
-
-        v_K_cluster_sum = np.sum(v_K[indices], axis=0)
-        A_cluster_sum = np.sum(A.T[indices, :], axis=0)
-        sum_HvK += (v_K_cluster_sum**2) / n_j
-        sum_HAT += (np.sum(A_cluster_sum**2)) / n_j
-    obj_value = norm_v_K - sum_HvK + w * sum_HAT
-    return obj_value
+from randcolorgraphs.algorithms.linear_scalarization.compute_objective import (
+    dense_compute_linear_scalarization_objective,
+)
 
 
 @njit
@@ -124,7 +93,7 @@ def greedy_algorithm_inefficient(v_K, A, inital_clusters, w, two_swap_max_dist, 
     """
     current_clusters = inital_clusters
     best_state = current_clusters
-    best_clusters_objective = compute_obj(v_K, A, current_clusters, w)
+    best_clusters_objective = dense_compute_linear_scalarization_objective(v_K, A, current_clusters, w)
 
     while True:
         best_next_clusters_objective = best_clusters_objective
@@ -134,7 +103,7 @@ def greedy_algorithm_inefficient(v_K, A, inital_clusters, w, two_swap_max_dist, 
         # for cluster in clusters: for possible unbalanced split in all possible splits: ... (update best_move and best_move_objective here)
         unbalanced_split_clusters = generate_unbalanced_splits(current_clusters)
         for one_swap_cluster in unbalanced_split_clusters:
-            obj_value = compute_obj(v_K, A, one_swap_cluster, w)
+            obj_value = dense_compute_linear_scalarization_objective(v_K, A, one_swap_cluster, w)
             if obj_value < best_next_clusters_objective:
                 best_next_clusters = one_swap_cluster
                 best_next_clusters_objective = obj_value
@@ -142,7 +111,7 @@ def greedy_algorithm_inefficient(v_K, A, inital_clusters, w, two_swap_max_dist, 
         # Go through all 2-Swaps
         one_swap_clusters = generate_2_swaps(current_clusters, two_swap_max_dist)
         for one_swap_cluster in one_swap_clusters:
-            obj_value = compute_obj(v_K, A, one_swap_cluster, w)
+            obj_value = dense_compute_linear_scalarization_objective(v_K, A, one_swap_cluster, w)
             if obj_value < best_next_clusters_objective:
                 best_next_clusters = one_swap_cluster
                 best_next_clusters_objective = obj_value
@@ -150,7 +119,7 @@ def greedy_algorithm_inefficient(v_K, A, inital_clusters, w, two_swap_max_dist, 
         # Go through all 1-Swaps
         one_swap_clusters = generate_1_swaps(current_clusters, one_swap_max_dist)
         for one_swap_cluster in one_swap_clusters:
-            obj_value = compute_obj(v_K, A, one_swap_cluster, w)
+            obj_value = dense_compute_linear_scalarization_objective(v_K, A, one_swap_cluster, w)
             if obj_value < best_next_clusters_objective:
                 best_next_clusters = one_swap_cluster
                 best_next_clusters_objective = obj_value
