@@ -8,6 +8,7 @@ from randcolorgraphs.algorithms.linear_scalarization.optimal_contiguous.cluster_
 
 @njit
 def optimal_contiguous_linear_scalarization_algo(x, A, w):
+    """Scales O(n^3)"""
     #     !!!
     # TODO !!!This function was written by Copilot, either rewrite or get a source!!
     #     !!!
