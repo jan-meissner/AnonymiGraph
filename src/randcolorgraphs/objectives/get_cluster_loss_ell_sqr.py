@@ -11,8 +11,8 @@ def get_cluster_loss_ell_sqr(x, clusters):
     Compute the cluster loss `ell` (WCSS) to the power of 2 for the given clusters and data points.
 
     Args:
-        clusters (np.ndarray): 1D array of cluster labels where each element indicates the cluster label of the corresponding point.
         x (np.ndarray): 1D array of numerical values associated with the data points.
+        clusters (np.ndarray): 1D array of cluster labels where each element indicates the cluster label of the corresponding point.
 
     Returns:
         float: The computed loss `ell` to the power of 2.
