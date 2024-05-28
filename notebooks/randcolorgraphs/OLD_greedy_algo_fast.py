@@ -231,14 +231,11 @@ def get_objective(current_clusters, x, At_sparse, w, p=2):
     p_power_sum_SAt = get_sparse_p_power_sum(SAt, p=p)  # O(|E|)
 
     obj = np.sum(x**p)
-    print("HELLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLO?")
     for c in cluster_to_indices:
         cluster_indices = cluster_to_indices[c]
         n_j = len(cluster_indices)
 
         obj += -Sx[c] ** p / n_j + w * p_power_sum_SAt[c] / n_j
-
-        print(c, Sx[c], p_power_sum_SAt[c], n_j, w)
 
     return obj
 
@@ -315,16 +312,16 @@ def move_split_cluster(current_clusters, cluster_to_indices, Sx, SAt, p_power_su
 
         # Found a split that was better than currently best
         if best_loop_idx > -1:
-            print(
-                "Found a better split at vertex best_split_index",
-                best_loop_idx,
-                "of",
-                len(cluster_indices),
-                "for cluster",
-                c,
-                "Best delta obj is now ",
-                best_delta_obj,
-            )
+            # print(
+            #    "Found a better split at vertex best_split_index",
+            #    best_loop_idx,
+            #    "of",
+            #    len(cluster_indices),
+            #    "for cluster",
+            #    c,
+            #    "Best delta obj is now ",
+            #    best_delta_obj,
+            # )
             best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
             new_cluster_index = np.max(current_clusters) + 1
             for j in range(best_loop_idx + 1):
@@ -364,6 +361,7 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000):
     print("Getting Initial Objective")
     current_clusters = inital_clusters
     current_objective = get_objective(current_clusters, x, At_sparse, w, p=2)
+    print("init objective", current_objective)
 
     print("Starting Iterating")
     for iteration in range(max_iter):

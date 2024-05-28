@@ -50,7 +50,6 @@ def _generate_partial_merges(state):
         # Merge Phase; Merge first and second cluster
         first_cluster = unique_cluster_sorted[i]
         second_cluster = unique_cluster_sorted[i + 1]
-
         new_state[new_state == second_cluster] = first_cluster
 
         # Split the clusters (with single difference that we now includes the 0vsn split)
@@ -64,7 +63,25 @@ def _generate_partial_merges(state):
                 new_split_state = new_state.copy()
                 for idx in indices_to_split:
                     new_split_state[idx] = new_cluster_index
-                unbalanced_splits.append(new_split_state)
+
+                # Avoid adding the original state
+                n_c1_to_c2, n_c1_to_c1, n_c2_to_c1, n_c2_to_c2 = 0, 0, 0, 0
+                for idx in cluster_indices:
+                    if state[idx] == first_cluster:
+                        if new_split_state[idx] == first_cluster:
+                            n_c1_to_c1 += 1
+                        else:
+                            n_c1_to_c2 += 1
+                    else:
+                        if new_split_state[idx] == first_cluster:
+                            n_c2_to_c1 += 1
+                        else:
+                            n_c2_to_c2 += 1
+                if n_c1_to_c2 + n_c2_to_c1 == 0 or n_c1_to_c1 + n_c2_to_c2 == 0:
+                    # new_split_state is state up to relabeling
+                    continue
+                else:
+                    unbalanced_splits.append(new_split_state)
 
     return unbalanced_splits
 
@@ -142,6 +159,9 @@ def unoptimized_greedy_search_linear_scalarization(v_K, A, inital_clusters, w, p
     best_state = current_clusters
     best_clusters_objective = dense_compute_linear_scalarization_objective(v_K, A, current_clusters, w)
 
+    print("init obj:", best_clusters_objective)
+
+    iteration = 0
     while True:
         best_next_clusters_objective = best_clusters_objective
         best_next_clusters = current_clusters
@@ -158,17 +178,17 @@ def unoptimized_greedy_search_linear_scalarization(v_K, A, inital_clusters, w, p
                 best_move_type = "split"
 
         # (SWAP) from PAM O(n*pam_cluster_dist)
-        swap_clusters = _generate_pam_swaps(current_clusters, pam_cluster_dist)
-        for swap_cluster in swap_clusters:
-            obj_value = dense_compute_linear_scalarization_objective(v_K, A, swap_cluster, w)
-            if obj_value < best_next_clusters_objective:
-                best_next_clusters = swap_cluster
-                best_next_clusters_objective = obj_value
-                best_move_type = "swap"
-
-        # Partial Merge;
-        # can be seen as a merge with an instantly followed unbalanced split, only adjacent clusters are merged
-        # correct bad initial splits
+        # swap_clusters = _generate_pam_swaps(current_clusters, pam_cluster_dist)
+        # for swap_cluster in swap_clusters:
+        #    obj_value = dense_compute_linear_scalarization_objective(v_K, A, swap_cluster, w)
+        #    if obj_value < best_next_clusters_objective:
+        #        best_next_clusters = swap_cluster
+        #        best_next_clusters_objective = obj_value
+        #        best_move_type = "swap"
+        #
+        # # Partial Merge;
+        # # can be seen as a merge with an instantly followed unbalanced split, only adjacent clusters are merged
+        # # correct bad initial splits
         partial_merge_clusters = _generate_partial_merges(current_clusters)
         for partial_merge_cluster in partial_merge_clusters:
             obj_value = dense_compute_linear_scalarization_objective(v_K, A, partial_merge_cluster, w)
@@ -194,6 +214,10 @@ def unoptimized_greedy_search_linear_scalarization(v_K, A, inital_clusters, w, p
         best_state = current_clusters
         best_clusters_objective = best_next_clusters_objective
 
-        print("Optimal move in this round:", best_move_type)
+        print("Iteration", iteration, "Objective:", best_clusters_objective, "move_type", best_move_type)
+        # if iteration > 0:
+        #    break
+        iteration += 1
 
+    print("!!!!!!!!!!!!!!!!! RUNNING UNOPTIMIZED_GREEDY_SEARCH IN DEBUG MODE")
     return best_state, best_clusters_objective
