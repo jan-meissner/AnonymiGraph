@@ -177,15 +177,6 @@ def unoptimized_greedy_search_linear_scalarization(v_K, A, inital_clusters, w, p
                 best_next_clusters_objective = obj_value
                 best_move_type = "split"
 
-        # (SWAP) from PAM O(n*pam_cluster_dist)
-        # swap_clusters = _generate_pam_swaps(current_clusters, pam_cluster_dist)
-        # for swap_cluster in swap_clusters:
-        #    obj_value = dense_compute_linear_scalarization_objective(v_K, A, swap_cluster, w)
-        #    if obj_value < best_next_clusters_objective:
-        #        best_next_clusters = swap_cluster
-        #        best_next_clusters_objective = obj_value
-        #        best_move_type = "swap"
-        #
         # # Partial Merge;
         # # can be seen as a merge with an instantly followed unbalanced split, only adjacent clusters are merged
         # # correct bad initial splits
@@ -196,6 +187,15 @@ def unoptimized_greedy_search_linear_scalarization(v_K, A, inital_clusters, w, p
                 best_next_clusters = partial_merge_cluster
                 best_next_clusters_objective = obj_value
                 best_move_type = "merge-split"
+
+        # (SWAP) from PAM O(n*pam_cluster_dist)
+        swap_clusters = _generate_pam_swaps(current_clusters, pam_cluster_dist)
+        for swap_cluster in swap_clusters:
+            obj_value = dense_compute_linear_scalarization_objective(v_K, A, swap_cluster, w)
+            if obj_value < best_next_clusters_objective:
+                best_next_clusters = swap_cluster
+                best_next_clusters_objective = obj_value
+                best_move_type = "swap"
 
         # Go through all 2-Swaps
         # one_swap_clusters = generate_2_swaps(current_clusters, two_swap_max_dist)
@@ -219,5 +219,5 @@ def unoptimized_greedy_search_linear_scalarization(v_K, A, inital_clusters, w, p
         #    break
         iteration += 1
 
-    print("!!!!!!!!!!!!!!!!! RUNNING UNOPTIMIZED_GREEDY_SEARCH IN DEBUG MODE")
+    # print("!!!!!!!!!!!!!!!!! RUNNING UNOPTIMIZED_GREEDY_SEARCH IN DEBUG MODE")
     return best_state, best_clusters_objective

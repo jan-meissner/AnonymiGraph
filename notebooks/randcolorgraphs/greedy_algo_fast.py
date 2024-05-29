@@ -184,8 +184,6 @@ def move_split(cluster_indices, Sx, SAt, p_power_sum_SAt, x, At_sparse, w, p=2):
     best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
     best_delta_obj = 0
 
-    # Cluster indices are assumed to be in
-
     # Notation: clusters j and k are transformed into j_prime and k_prime (here k is empty so omitted)
     n_j = len(cluster_indices)
     Sx_j = Sx
@@ -370,14 +368,86 @@ def move_merge_split(cluster_state1, c1, cluster_state2, c2, x, At_sparse, w, p=
         return delta_obj, cluster_update
 
 
+@njit
 def move_swap(cluster_state1, c1, cluster_state2, c2, x, At_sparse, w, p=2):
     best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
     best_delta_obj = 0
 
+    best_swap_index = -1  # -1 indicates no improvement found at all
+    best_cluster_to_swap_to = -1
+
+    # Move points from c1 to c2
+    if cluster_state1[STATE_N] > 1:  # Ignore Swaps that remove clusters
+        for i in cluster_state1[STATE_CLUSTER_INDICES]:
+            delta_obj_x = compute_delta_obj(
+                (cluster_state1[STATE_SX] - x[i]) ** p,
+                (cluster_state2[STATE_SX] + x[i]) ** p,
+                cluster_state1[STATE_N] - 1,
+                cluster_state2[STATE_N] + 1,
+                cluster_state1[STATE_SX] ** p,
+                cluster_state2[STATE_SX] ** p,
+                cluster_state1[STATE_N],
+                cluster_state2[STATE_N],
+            )
+            delta_obj_A = compute_delta_obj(
+                cluster_state1[STATE_P_POWER_SUM_SAT]
+                + get_subtract_change_in_p_power_sum(cluster_state1[STATE_SAT], At_sparse[i], p=p),
+                cluster_state2[STATE_P_POWER_SUM_SAT]
+                + get_add_change_in_p_power_sum(cluster_state2[STATE_SAT], At_sparse[i], p=p),
+                cluster_state1[STATE_N] - 1,
+                cluster_state2[STATE_N] + 1,
+                cluster_state1[STATE_P_POWER_SUM_SAT],
+                cluster_state2[STATE_P_POWER_SUM_SAT],
+                cluster_state1[STATE_N],
+                cluster_state2[STATE_N],
+            )
+
+            delta_obj = -delta_obj_x + w * delta_obj_A
+            if delta_obj < best_delta_obj:
+                best_delta_obj = delta_obj
+                best_swap_index = i
+                best_cluster_to_swap_to = c2
+
+    # Move points from c2 to c1
+    if cluster_state2[STATE_N] > 1:  # Ignore Swaps that remove clusters
+        for i in cluster_state2[STATE_CLUSTER_INDICES]:
+            delta_obj_x = compute_delta_obj(
+                (cluster_state1[STATE_SX] + x[i]) ** p,
+                (cluster_state2[STATE_SX] - x[i]) ** p,
+                cluster_state1[STATE_N] + 1,
+                cluster_state2[STATE_N] - 1,
+                cluster_state1[STATE_SX] ** p,
+                cluster_state2[STATE_SX] ** p,
+                cluster_state1[STATE_N],
+                cluster_state2[STATE_N],
+            )
+            delta_obj_A = compute_delta_obj(
+                cluster_state1[STATE_P_POWER_SUM_SAT]
+                + get_add_change_in_p_power_sum(cluster_state1[STATE_SAT], At_sparse[i], p=p),
+                cluster_state2[STATE_P_POWER_SUM_SAT]
+                + get_subtract_change_in_p_power_sum(cluster_state2[STATE_SAT], At_sparse[i], p=p),
+                cluster_state1[STATE_N] + 1,
+                cluster_state2[STATE_N] - 1,
+                cluster_state1[STATE_P_POWER_SUM_SAT],
+                cluster_state2[STATE_P_POWER_SUM_SAT],
+                cluster_state1[STATE_N],
+                cluster_state2[STATE_N],
+            )
+
+            delta_obj = -delta_obj_x + w * delta_obj_A
+            if delta_obj < best_delta_obj:
+                best_delta_obj = delta_obj
+                best_swap_index = i
+                best_cluster_to_swap_to = c1
+
+    # Found a split that was better than currently best
+    if best_swap_index > -1:
+        best_cluster_update[best_swap_index] = best_cluster_to_swap_to
+
     return best_delta_obj, best_cluster_update
 
 
-# @njit
+@njit
 def calc_best_two_move(cluster_state1, c1, cluster_state2, c2, x, At_sparse, w, p=2):
     best_cluster_update = Dict.empty(key_type=types.int64, value_type=types.int64)
     best_delta_obj = 0
@@ -527,9 +597,9 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000, p=
                 del one_interactions[c1]
 
             for c2 in curr_cluster_states.keys():
-                if c1 < c2:
-                    if (c1, c2) in two_interactions:
-                        del two_interactions[(c1, c2)]
+                c_a, c_b = sorted((c1, c2))
+                if (c_a, c_b) in two_interactions:
+                    del two_interactions[(c_a, c_b)]
 
         # logger.info("Calculating best one_moves")
         # Update the one_interactions (e.g. split) of a clusters that were changed
@@ -654,7 +724,7 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000, p=
 
         # timer.stop_block('update_step')
 
-        move_type_str = {MOVE_NONE: "none", MOVE_SPLIT: "split", MOVE_MERGE_SPLIT: "merge-split"}
+        move_type_str = {MOVE_SWAP: "swap", MOVE_SPLIT: "split", MOVE_MERGE_SPLIT: "merge-split"}
         print(
             "Iteration",
             iteration,
