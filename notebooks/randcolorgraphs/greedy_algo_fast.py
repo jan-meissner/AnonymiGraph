@@ -525,6 +525,14 @@ def get_objective(curr_cluster_states, x, w, p=2):
 
 
 @njit
+def get_expected_edge_overlap(curr_cluster_states):
+    expected_edge_overlap = 0.0
+    for cluster_state in curr_cluster_states.values():
+        expected_edge_overlap += cluster_state[STATE_P_POWER_SUM_SAT] / cluster_state[STATE_N]
+    return expected_edge_overlap
+
+
+@njit
 def get_sorted_unique_clusters(current_clusters):
     cluster_to_index_of_unique_cluster_sorted = Dict.empty(
         key_type=types.int64,
@@ -732,6 +740,8 @@ def greedy_search(x, edges_out_to_in, inital_clusters, w, max_iter=100000000, p=
             curr_objective,
             "move_type",
             move_type_str.get(best_move_type, "ERROR"),
+            "expected_edge_overlap",
+            get_expected_edge_overlap(curr_cluster_states),
         )
 
         assert curr_objective >= 0, "The objective must be positive at all times."
